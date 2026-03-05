@@ -13,37 +13,80 @@ export default function Calculator(){
         current: 0
     }
 
-    const [states, setStates] = useState(...initialStates)
+    const [states, setStates] = useState(initialStates)
 
     function AddNum(n){
-        setStates(prev => {
-            return{...prev, displayValue: prev.displayValue === '0' ? n : prev.displayValue + n}
-        })
+
+        if(n != '.'){
+            setStates(prev => {
+                return{...prev, displayValue: prev.displayValue === '0' ? n : prev.displayValue + n}
+            })
+
+            return;
+        }
+
+
+        if(!states.displayValue.includes('.')){
+            setStates(prev => {
+                return{...prev, displayValue: prev.displayValue + n}
+            })
+        }
     }
 
     function SetOperation(op){
 
+        const values = [states.values];
+        values[states.current] = parseFloat(states.displayValue)
+
         setStates(prev => {
-            return{...prev, displayValue: '0', operation: op, current: prev.current === 0 ? prev.current + 1 : prev.current - 1}
+            return{...prev, displayValue: '0', operation: op, values, current: prev.current === 0 ? prev.current + 1 : prev.current - 1}
         })
+
+        
+
     }
 
     function GetResult(){
+        if(states.operation!=null){
+            const values = [...states.values];
 
+            try{
+                values[0] = eval(`${parseFloat(values[0])} ${states.operation} ${parseFloat(states.displayValue)}`)
+            }catch(error){
+                values[0] = states.values[0];
+            }
+
+            setStates(prev => {
+                return{...prev, displayValue: values[0], operation: null, values: [0, 0], current: 0}
+            })
+        }
     }
 
-    function ClearDisplay(){
+    function ClearMemory(){
+
+        setStates(initialStates)
+
     }
 
     return(
         <div className="container">
             <div className="TopBox">
-                <p className="NumberDisplay">{states.displayValue}</p>
+                    <div className="PreviewDiv">
+                        {
+                            states.operation != null &&
+
+                            <p className="NumberPreview">{states.values[0]} {states.operation} {states.displayValue}</p>
+                        }
+                    </div>
+
+                <div className="DisplayDiv">
+                    <p className="NumberDisplay">{states.displayValue}</p>
+                </div>
             </div>
 
             <div className="BottomBox">
                 <div className="ButtonsGroup">
-                    <Buttons symbol="AC" action={() => ClearDisplay('0')} width="74%" color="#A7A7A7"/>
+                    <Buttons symbol="AC" action={() => ClearMemory('0')} width="74%" color="#A7A7A7"/>
                     <Buttons symbol="/" action={() => SetOperation('/')} width="20%" color="#FD9427"/>
                 </div>
 
@@ -77,8 +120,8 @@ export default function Calculator(){
                 <br />
 
                 <div className="ButtonsGroup">
-                    <Buttons symbol="0" action={() => GetFunction()} width="47%" color="#333333"/>
-                    <Buttons symbol="." action={() => {setDisplayNum(displayNum + ".")}} width="20%" color="#333333"/>
+                    <Buttons symbol="0" action={() => AddNum('0')} width="47%" color="#333333"/>
+                    <Buttons symbol="." action={() => AddNum('.')} width="20%" color="#333333"/>
                     <Buttons symbol="=" action={() => GetResult()} width="20%" color="#FD9427"/>
                 </div>
             </div>
